@@ -1,0 +1,12 @@
+# MAC to interface name mapping for staticeth.
+# Install as /etc/config/mac-static-interfaces and replace the placeholder
+# MAC addresses below with the real ones.
+#
+# Syntax: option <target_interface_name> "<mac_address>"
+#
+# Method: https://openwrt.org/docs/guide-user/base-system/persistent-ethernet-interface-naming-by-mac-address
+# Project: https://github.com/nagual2/openwrt-staticeth
+
+config mac-static-interfaces
+	option wan0 "02:11:22:33:44:01"
+	option lan0 "02:11:22:33:44:02"

@@ -1,0 +1,30 @@
+#!/bin/sh
+# staticeth hotplug companion: rename newly added physical interfaces by MAC.
+# Reads the same mapping as /etc/init.d/staticeth: /etc/config/mac-static-interfaces.
+# Boot-time renaming is handled by the init script; this covers adapters plugged
+# (or re-enumerated) while the system is already running.
+
+[ "$ACTION" = "add" ] || exit 0
+[ -n "$INTERFACE" ] || exit 0
+# physical devices only: bridges and virtual interfaces have no device/uevent
+[ -e "/sys/class/net/$INTERFACE/device/uevent" ] || exit 0
+
+CONFIG="/etc/config/mac-static-interfaces"
+[ -f "$CONFIG" ] || exit 0
+
+mac="$(cat "/sys/class/net/$INTERFACE/address" 2>/dev/null)"
+[ -n "$mac" ] || exit 0
+
+new_name="$(grep -i "$mac" "$CONFIG" 2>/dev/null | awk '{print $2}' | head -n 1)"
+[ -n "$new_name" ] || exit 0
+
+# already named correctly — nothing to do
+[ "$new_name" = "$INTERFACE" ] && exit 0
+# target name occupied: never swap names at runtime, leave the device alone
+[ -e "/sys/class/net/$new_name" ] && exit 0
+
+ip link set "$INTERFACE" down
+ip link set "$INTERFACE" name "$new_name"
+# netifd will attach the renamed device to its configured interface on the
+# next netlink event; bring it up so unconfigured setups still work
+ip link set "$new_name" up

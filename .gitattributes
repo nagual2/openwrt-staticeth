@@ -1,0 +1,5 @@
+* text=auto
+*.md text
+*.sh text eol=lf
+files/etc/init.d/staticeth text eol=lf
+files/etc/hotplug.d/net/90-staticeth text eol=lf

@@ -1,0 +1,22 @@
+openwrt-staticeth
+Copyright (C) 2026 the openwrt-staticeth authors (nagual2)
+
+This project is based on OpenWrt project documentation and forum discussion:
+
+1. "Persistent Ethernet Interface Naming by MAC Address"
+   https://openwrt.org/docs/guide-user/base-system/persistent-ethernet-interface-naming-by-mac-address
+   (OpenWrt Wiki, licensed CC BY-SA 4.0)
+
+   files/etc/init.d/staticeth is taken from that page essentially verbatim.
+
+2. "Stable network interface names for USB Ethernet Dongles"
+   https://forum.openwrt.org/t/stable-network-interface-names-for-usb-ethernet-dongles/98539
+   (OpenWrt Forum thread; accepted solution by bobafetthotmail — origin of the wiki page)
+
+3. "Hotplug" — OpenWrt Wiki
+   https://openwrt.org/docs/guide-user/base-system/hotplug
+   (hotplug "rename interfaces by MAC address" example — basis for
+   files/etc/hotplug.d/net/90-staticeth, adapted to read the same
+   mapping file as the init script)
+
+Licensed under CC BY-SA 4.0 — see LICENSE.
