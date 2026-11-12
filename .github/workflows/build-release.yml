@@ -1,0 +1,60 @@
+name: Build release packages
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout staticeth
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -qq wget zstd git binutils
+
+      - name: Resolve version
+        id: ver
+        run: |
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=1.0.0" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Structure test
+        run: bash tests/check_structure.sh
+
+      - name: Build IPK (OpenWrt 23.x / opkg)
+        run: |
+          make -f Makefile.build ipk PROJECT_VERSION="${{ steps.ver.outputs.version }}"
+
+      - name: Build APK (OpenWrt 25.12+ / apk)
+        env:
+          PROJECT_VERSION: ${{ steps.ver.outputs.version }}
+        run: |
+          chmod +x scripts/build-apk-mkpkg.sh
+          ./scripts/build-apk-mkpkg.sh
+          ls -la dist/
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: staticeth-packages
+          path: dist/*
+          retention-days: 90
+
+      - name: Attach packages to GitHub Release
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          overwrite_files: true

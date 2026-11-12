@@ -34,6 +34,21 @@
 
 ## Установка
 
+### Из релиза (рекомендуется)
+
+Скачайте `.apk` (OpenWrt 25.12+) или `.ipk` (OpenWrt 23.x) со страницы [Releases](https://github.com/nagual2/openwrt-staticeth/releases) и установите на роутер:
+
+```sh
+scp -O staticeth-1.0.0-r1.apk root@192.168.1.1:/tmp/
+ssh root@192.168.1.1
+apk add --allow-untrusted /tmp/staticeth-1.0.0-r1.apk     # OpenWrt 25.12+
+# opkg install /tmp/staticeth_1.0.0-r1_all.ipk            # OpenWrt 23.x
+```
+
+Пакет устанавливает оба скрипта, создаёт `/etc/config/mac-static-interfaces` из примера, если его ещё нет, и включает сервис. Дальше — шаги с MAC и сетью ниже.
+
+### Из исходников
+
 Скопируйте репозиторий на роутер и запустите установщик:
 
 ```sh

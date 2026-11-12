@@ -1,0 +1,54 @@
+SHELL := /bin/sh
+.RECIPEPREFIX := >
+
+PKG_NAME := staticeth
+PROJECT_VERSION ?=
+GIT_TAG := $(strip $(shell git describe --tags --match 'v*' --abbrev=0 2>/dev/null || true))
+PKG_VERSION := $(strip $(if $(PROJECT_VERSION),$(PROJECT_VERSION),$(if $(GIT_TAG),$(patsubst v%,%,$(GIT_TAG)),1.0.0)))
+PKG_RELEASE ?= 1
+
+OUTPUT_DIR ?= dist
+WORK_DIR := build/ipk
+DATA_DIR := $(WORK_DIR)/data
+CONTROL_DIR := $(WORK_DIR)/control
+
+IPK_FILENAME := $(PKG_NAME)_$(PKG_VERSION)-$(PKG_RELEASE)_all.ipk
+IPK_PATH := $(OUTPUT_DIR)/$(IPK_FILENAME)
+
+.PHONY: all ipk apk test clean
+
+all: ipk apk
+
+test:
+> @bash tests/check_structure.sh
+
+ipk: $(IPK_PATH)
+
+$(IPK_PATH): Makefile.build files/etc/init.d/staticeth files/etc/hotplug.d/net/90-staticeth files/etc/config/mac-static-interfaces.example
+> @echo "Building IPK $(PKG_NAME) $(PKG_VERSION)-$(PKG_RELEASE)..."
+> @rm -rf $(WORK_DIR)
+> @mkdir -p $(DATA_DIR)/etc $(CONTROL_DIR)
+> @cp -a files/etc/. $(DATA_DIR)/etc/
+> @printf 'Package: %s\n' '$(PKG_NAME)' > $(CONTROL_DIR)/control
+> @printf 'Version: %s-%s\n' '$(PKG_VERSION)' '$(PKG_RELEASE)' >> $(CONTROL_DIR)/control
+> @printf 'Architecture: all\n' >> $(CONTROL_DIR)/control
+> @printf 'Section: net\n' >> $(CONTROL_DIR)/control
+> @printf 'Priority: optional\n' >> $(CONTROL_DIR)/control
+> @printf 'Maintainer: nagual2\n' >> $(CONTROL_DIR)/control
+> @printf 'Description: Persistent Ethernet interface naming by MAC address (staticeth).\n' >> $(CONTROL_DIR)/control
+> @printf '#!/bin/sh\n[ -n "$${IPKG_INSTROOT}" ] && exit 0\n[ -f /etc/config/mac-static-interfaces ] || cp /etc/config/mac-static-interfaces.example /etc/config/mac-static-interfaces\n/etc/init.d/staticeth enable\nexit 0\n' > $(CONTROL_DIR)/postinst
+> @chmod 0755 $(CONTROL_DIR)/postinst
+> @tar -C $(DATA_DIR) -czf $(WORK_DIR)/data.tar.gz .
+> @tar -C $(CONTROL_DIR) -czf $(WORK_DIR)/control.tar.gz control postinst
+> @printf '2.0\n' > $(WORK_DIR)/debian-binary
+> @mkdir -p $(OUTPUT_DIR)
+> @rm -f $(IPK_PATH)
+> @(cd $(WORK_DIR) && ar rcs $(abspath $(IPK_PATH)) debian-binary control.tar.gz data.tar.gz)
+> @echo "Package built: $(IPK_PATH)"
+
+apk:
+> @chmod +x scripts/build-apk-mkpkg.sh
+> @PROJECT_VERSION="$(PKG_VERSION)" PKG_RELEASE="$(PKG_RELEASE)" ./scripts/build-apk-mkpkg.sh
+
+clean:
+> @rm -rf build dist

@@ -34,6 +34,21 @@ Die Methode stammt von der offiziellen OpenWrt-Wiki-Seite [Persistent Ethernet I
 
 ## Installation
 
+### Aus einem Release (empfohlen)
+
+`.apk` (OpenWrt 25.12+) oder `.ipk` (OpenWrt 23.x) von der [Releases](https://github.com/nagual2/openwrt-staticeth/releases)-Seite herunterladen und auf dem Router installieren:
+
+```sh
+scp -O staticeth-1.0.0-r1.apk root@192.168.1.1:/tmp/
+ssh root@192.168.1.1
+apk add --allow-untrusted /tmp/staticeth-1.0.0-r1.apk     # OpenWrt 25.12+
+# opkg install /tmp/staticeth_1.0.0-r1_all.ipk            # OpenWrt 23.x
+```
+
+Das Paket installiert beide Skripte, erzeugt `/etc/config/mac-static-interfaces` aus dem beigefügten Beispiel (falls nicht vorhanden) und aktiviert den Dienst. Weiter mit den MAC/Netzwerk-Schritten unten.
+
+### Aus dem Quellrepo
+
 Repo auf den Router kopieren und Installer ausführen:
 
 ```sh
